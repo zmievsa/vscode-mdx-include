@@ -90,7 +90,7 @@ function updateDiagnostics(document: vscode.TextDocument, collection: vscode.Dia
 
     const text = document.getText();
     // Use a more efficient regex with a single pass
-    const fileRefRegex = /\{[*!][>+-]?\s+([\w\d\/\.\-_]+)(\s+(?:ln|hl)\[[\d,:]+\])*\s*[*!]\}/g;
+    const fileRefRegex = /\{[*!][>+-]?\s+([\w\d\/\.\-_]+)(\s+(?:ln|hl)?\[[\w,:-]+\])*\s*[*!]\}/g;
     const diagnostics: vscode.Diagnostic[] = [];
     let fileRefMatch;
 
@@ -130,7 +130,7 @@ function findFileReferences(document: vscode.TextDocument): FileReference[] {
     const fileReferences: FileReference[] = [];
 
     // Find all file references with the format {* path/to/file.ext ln[x:y,z] hl[a:b,c] *}
-    const fileRefRegex = /\{[*!][>+-]?\s+([\w\d\/\.\-_]+)(\s+(?:ln|hl)\[[\d,:]+\])*\s*[*!]\}/g;
+    const fileRefRegex = /\{[*!][>+-]?\s+([\w\d\/\.\-_]+)(\s+(?:ln|hl)?\[[\w,:-]+\])*\s*[*!]\}/g;
     let fileRefMatch;
 
     while ((fileRefMatch = fileRefRegex.exec(text)) !== null) {
@@ -251,7 +251,7 @@ class MkDocsLinkCompletionProvider implements vscode.CompletionItemProvider {
         }
 
         // If we are inside a parameter section (ln[] or hl[]), don't provide completions
-        if (lineText.match(/\{[*!][>+-]?\s+[\w\d\/\.\-_]+\s+(?:ln|hl)\[/)) {
+        if (lineText.match(/\{[*!][>+-]?\s+[\w\d\/\.\-_]+\s+(?:ln|hl)?\[/)) {
             return undefined;
         }
 
