@@ -14,11 +14,17 @@ This extension helps you work with mdx file references in markdown files by:
 
 The extension recognizes file references in markdown with the following syntax:
 
+```shell
 {* ../../path/to/file.py hl[2] *}
+```
 
+```shell
 {* ../../path/to/file.py hl[5:9] *}
+```
 
+```shell
 {* ../../path/to/file.py ln[3:6,8,10:11] hl[3,5:6,10] *}
+```
 
 Where:
 

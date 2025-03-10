@@ -2,7 +2,7 @@
   "name": "vscode-mdx-include",
   "displayName": "Mdx Include File",
   "description": "Lints and provides navigation for mdx file references in markdown code blocks",
-  "version": "0.3.6",
+  "version": "0.1.0",
   "engines": {
     "vscode": "^1.60.0"
   },

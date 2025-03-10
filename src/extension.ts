@@ -90,7 +90,7 @@ function updateDiagnostics(document: vscode.TextDocument, collection: vscode.Dia
 
     const text = document.getText();
     // Use a more efficient regex with a single pass
-    const fileRefRegex = /\{\*\s+([\w\d\/\.\-_]+)(\s+(?:ln|hl)\[[\d,:]+\])*\s*\*\}/g;
+    const fileRefRegex = /\{[*!][>+-]?\s+([\w\d\/\.\-_]+)(\s+(?:ln|hl)?\[[\w,:-]+\])*\s*[*!]\}/g;
     const diagnostics: vscode.Diagnostic[] = [];
     let fileRefMatch;
 
@@ -130,7 +130,7 @@ function findFileReferences(document: vscode.TextDocument): FileReference[] {
     const fileReferences: FileReference[] = [];
 
     // Find all file references with the format {* path/to/file.ext ln[x:y,z] hl[a:b,c] *}
-    const fileRefRegex = /\{\*\s+([\w\d\/\.\-_]+)(\s+(?:ln|hl)\[[\d,:]+\])*\s*\*\}/g;
+    const fileRefRegex = /\{[*!][>+-]?\s+([\w\d\/\.\-_]+)(\s+(?:ln|hl)?\[[\w,:-]+\])*\s*[*!]\}/g;
     let fileRefMatch;
 
     while ((fileRefMatch = fileRefRegex.exec(text)) !== null) {
@@ -239,19 +239,19 @@ class MkDocsLinkCompletionProvider implements vscode.CompletionItemProvider {
         // Get text up to the cursor
         const lineText = document.lineAt(position.line).text.substring(0, position.character);
 
-        // Quick check first - if no '{*' in the line, return early
-        if (!lineText.includes('{*')) {
+        // Quick check first - if no '{*' or '{!' in the line, return early
+        if (!lineText.includes('{*') && !lineText.includes('{!')) {
             return undefined;
         }
 
         // Look for '{* ' to determine if we're in a file reference
-        const match = lineText.match(/\{\*\s+(.*?)$/);
+        const match = lineText.match(/\{[*!][>+-]?\s+(.*?)$/);
         if (!match) {
             return undefined;
         }
 
         // If we are inside a parameter section (ln[] or hl[]), don't provide completions
-        if (lineText.match(/\{\*\s+[\w\d\/\.\-_]+\s+(?:ln|hl)\[/)) {
+        if (lineText.match(/\{[*!][>+-]?\s+[\w\d\/\.\-_]+\s+(?:ln|hl)?\[/)) {
             return undefined;
         }
 
@@ -261,6 +261,10 @@ class MkDocsLinkCompletionProvider implements vscode.CompletionItemProvider {
         try {
             // Get the directory of the markdown file
             const docDir = path.dirname(document.uri.fsPath);
+
+            // Find the mkdocs root directory, matching the link provider's behavior
+            const mkdocsRootDir = findNearestMkDocsConfig(docDir);
+            const baseDir = mkdocsRootDir || docDir;
 
             // Determine the directory to search based on the current path
             let searchDir: string;
@@ -272,10 +276,10 @@ class MkDocsLinkCompletionProvider implements vscode.CompletionItemProvider {
                 const lastSlashIndex = currentPath.lastIndexOf('/');
                 prefix = currentPath.substring(0, lastSlashIndex + 1);
                 partialFileName = currentPath.substring(lastSlashIndex + 1);
-                searchDir = path.resolve(docDir, prefix);
+                searchDir = path.resolve(baseDir, prefix);
             } else {
-                // Otherwise, search in the document directory
-                searchDir = docDir;
+                // Otherwise, search in the base directory (mkdocs root or document directory)
+                searchDir = baseDir;
                 prefix = '';
                 partialFileName = currentPath;
             }
